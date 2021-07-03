@@ -8,7 +8,7 @@ using KModkit;
 
 public class LEDsScript : MonoBehaviour {
 
-    public enum Col
+    enum Col
     {
         Red,
         Orange,
@@ -16,38 +16,39 @@ public class LEDsScript : MonoBehaviour {
         Green,
         Blue,
         Purple,
-        Black
+        Black,
+        White
     }
 
     public KMBombInfo Bomb;
     public KMAudio Audio;
     public KMBombModule Module;
+    public KMColorblindMode Colorblind;
 
     public KMSelectable[] buttons;
     public GameObject[] backings;
     public MeshRenderer[] leds;
     public Material[] backingCols;
     public Material[] ledCols;
+    public TextMesh[] cbTexts;
 
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
     private Col[][] diagrams = new Col[][]
     {
-        new[]{Col.Orange, Col.Orange, Col.Black, Col.Red },
-        new[]{Col.Yellow, Col.Red, Col.Purple, Col.Green },
-        new[]{Col.Yellow, Col.Blue, Col.Orange, Col.Blue },
-        new[]{Col.Blue, Col.Green, Col.Red, Col.Black},
-        new[]{Col.Purple, Col.Orange, Col.Black, Col.Green },
-        new[]{Col.Red, Col.Blue, Col.Yellow, Col.Purple },
-        new[]{Col.Yellow, Col.Purple, Col.Blue, Col.Red },
-        new[]{Col.Blue, Col.Green, Col.Orange, Col.Green },
-        new[]{Col.Yellow, Col.Black, Col.Yellow, Col.Blue },
-        new[]{Col.Black, Col.Purple, Col.Yellow, Col.Purple },
-        new[]{Col.Green, Col.Black, Col.Purple, Col.Red },
-        new[]{Col.Green, Col.Orange, Col.Blue, Col.Orange },
-        new[]{Col.Black, Col.Orange, Col.Black, Col.Purple },
-        new[]{Col.Red, Col.Yellow, Col.Red, Col.Green }
+        new[]{Col.Green, Col.Black, Col.Blue, Col.Purple },
+        new[]{Col.Yellow, Col.Green, Col.White, Col.Orange },
+        new[]{Col.White, Col.Blue,Col.Green,Col.Yellow },
+        new[]{Col.Purple,Col.Red,Col.Blue,Col.White },
+        new[]{Col.Purple,Col.Orange,Col.Black,Col.Red },
+        new[]{Col.White, Col.Green,Col.Orange,Col.Red },
+        new[]{Col.Orange,Col.White,Col.Black,Col.Yellow },
+        new[]{Col.White,Col.Yellow,Col.Blue,Col.Black },
+        new[]{Col.Yellow,Col.Red,Col.Orange,Col.Blue },
+        new[]{Col.Yellow,Col.Purple,Col.Blue,Col.Red },
+        new[]{Col.Red,Col.Black,Col.Purple,Col.White },
+        new[]{Col.Purple,Col.Black, Col.Orange,Col.Green }
     };
     Col[] chosenDiagram;
     int[] correctPositions = new int[] { 2, 0, 1, 3, 0, 1, 3, 2, 2, 3, 1, 1, 0, 3 };
@@ -56,11 +57,8 @@ public class LEDsScript : MonoBehaviour {
     int offset;
     int changedButton;
     Col colorChangedTo;
-
-    int submit;
-    Col correctColor;
     int pointer = 0;
-
+    bool CBon;
     Col currentDisplayOnChanged;
 
     string[] positions = new[] { "top", "right", "bottom", "left" };
@@ -75,19 +73,54 @@ public class LEDsScript : MonoBehaviour {
         for (int i = 0; i < 4; i++)
             backings[i].GetComponentInChildren<MeshRenderer>().material = bg;
     }
-    int[] cycleColors = Enumerable.Range(0, 7).ToArray();
+    int[] cycleColors = Enumerable.Range(0, 8).ToArray();
 
     void Start ()
     {
-        GetDiagram();
-        GetChange();
-        DisplayThings();
-        DoLogging();
+         GetDiagram();
+         GetChange();
+         DisplayThings();
+         DoLogging();
+
+        /*
+        int count = 12;
+        int colorCount = 8;
+
+        string colorNames = "ROYGBPKW";
+        int[][] diagrams = new int[count][].Select(x => new int[4]).ToArray();
+        List<int> edges = new List<int>();
+        List<int> opposites = new List<int>();
+        int iterations = 0;
+        for (int i = 0; i < count; i++)
+        {
+            int[] pair;
+            int[] opposite;
+            do
+            {
+                iterations++;
+                int[] numbers = Enumerable.Range(0, colorCount).ToArray().Shuffle();
+                diagrams[i] = numbers.Take(4).ToArray();
+                pair = new int[4];
+                opposite = new int[2];
+                for (int j = 0; j < 4; j++)
+                    pair[j] = colorCount * diagrams[i][j] + diagrams[i][(j + 1) % 4];
+                opposite[0] = colorCount * diagrams[i][0] + diagrams[i][2];
+                opposite[1] = colorCount * diagrams[i][1] + diagrams[i][3];
+
+            } while (pair.Any(x => edges.Contains(x)) || opposite.Any(x => opposites.Contains(x)));
+            opposites.AddRange(opposite);
+            edges.AddRange(pair);
+        }
+        Debug.Log(diagrams.Select(dia => dia.Select(x => colorNames[x]).Join("")).Join());
+        Debug.LogFormat("Script took {0} iterations.", iterations);
+        */
+        //Generates a series of grids. 12 is the maximum without allowing duplicates. Allowing duplicates, 15 is the maximum but some of the diagrams are pretty gross. 
+
     }
 
     void GetDiagram()
     {
-        diagramNumber = UnityEngine.Random.Range(0, 14);
+        diagramNumber = UnityEngine.Random.Range(0, diagrams.Length);
         chosenDiagram = diagrams[diagramNumber].ToArray();
         offset = UnityEngine.Random.Range(0, 4);
     }
@@ -106,6 +139,8 @@ public class LEDsScript : MonoBehaviour {
     {
         for (int i = 0; i < 4; i++)
             leds[i].material = ledCols[(int)chosenDiagram[(i - offset + 4) % 4]];
+        if (Colorblind.ColorblindModeActive)
+            ToggleCB();
     }
     void DoLogging()
     {
@@ -130,9 +165,10 @@ public class LEDsScript : MonoBehaviour {
         else if (actualButton == changedButton)
         {
             pointer++;
-            pointer %= 7;
+            pointer %= 8;
             currentDisplayOnChanged = (Col)cycleColors[pointer];
             leds[pos].material = ledCols[(int)currentDisplayOnChanged];
+            SetCB(pos, currentDisplayOnChanged);
         }
         else
         {
@@ -159,8 +195,22 @@ public class LEDsScript : MonoBehaviour {
         }
     }
 
+    void ToggleCB()
+    {
+        CBon = !CBon;
+        for (int i = 0; i < 4; i++)
+            SetCB(i, chosenDiagram[(i - offset + 4) % 4]);
+    }
+
+    void SetCB(int pos, Col color)
+    {
+        if (color != Col.Black && color != Col.White && CBon)
+            cbTexts[pos].text = color.ToString().Substring(0, 1);
+        else cbTexts[pos].text = string.Empty;
+    }
+
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use [!{0} set bottom green] to set that LED to that color. Use [!{0} press right] to press that LED once.";
+    private readonly string TwitchHelpMessage = @"Use [!{0} set bottom green] to set that LED to that color. Use [!{0} press right] to press that LED once. Use [!{0} colorblind] to toggle colorblind mode.";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand (string command)
@@ -168,6 +218,12 @@ public class LEDsScript : MonoBehaviour {
         string[] colornames = new[] { "RED", "ORANGE", "YELLOW", "GREEN", "BLUE", "PURPLE", "BLACK" };
         command = command.Trim().ToUpperInvariant();
         string[] parameters = command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (new string[] { "COLORBLIND", "COLOURBLIND", "COLOR-BLIND", "COLOUR-BLIND", "CB" }.Contains(command))
+        {
+            yield return null;
+            ToggleCB();
+            yield break;
+        }
         if (parameters.Length == 3 && parameters[0] == "SET" && positions.Contains(parameters[1].ToLower()) && colornames.Contains(parameters[2]))
         {
             int pressedPos = Array.IndexOf(positions, parameters[1].ToLower());
@@ -194,6 +250,5 @@ public class LEDsScript : MonoBehaviour {
             yield return new WaitForSeconds(0.1f);
         }
         buttons[(correctPositions[diagramNumber] + offset) % 4].OnInteract();
-
     }
 }
