@@ -37,21 +37,21 @@ public class LEDsScript : MonoBehaviour {
     private bool moduleSolved;
     private Col[][] diagrams = new Col[][]
     {
-        new[]{Col.Green, Col.Black, Col.Blue, Col.Purple },
-        new[]{Col.Yellow, Col.Green, Col.White, Col.Orange },
-        new[]{Col.White, Col.Blue,Col.Green,Col.Yellow },
-        new[]{Col.Purple,Col.Red,Col.Blue,Col.White },
-        new[]{Col.Purple,Col.Orange,Col.Black,Col.Red },
-        new[]{Col.White, Col.Green,Col.Orange,Col.Red },
-        new[]{Col.Orange,Col.White,Col.Black,Col.Yellow },
-        new[]{Col.White,Col.Yellow,Col.Blue,Col.Black },
-        new[]{Col.Yellow,Col.Red,Col.Orange,Col.Blue },
-        new[]{Col.Yellow,Col.Purple,Col.Blue,Col.Red },
-        new[]{Col.Red,Col.Black,Col.Purple,Col.White },
-        new[]{Col.Purple,Col.Black, Col.Orange,Col.Green }
+        new[]{ Col.Black, Col.Red, Col.Purple, Col.Blue},
+        new[]{ Col.Red, Col.Green, Col.Black, Col.White},
+        new[]{ Col.Yellow, Col.Red, Col.Orange, Col.Green},
+        new[]{ Col.Purple, Col.Orange, Col.Red, Col.Blue},
+        new[]{ Col.White, Col.Purple, Col.Red, Col.Yellow},
+        new[]{ Col.Yellow, Col.Orange, Col.Black, Col.Purple},
+        new[]{ Col.Yellow, Col.Purple, Col.White, Col.Blue},
+        new[]{ Col.Green, Col.Yellow, Col.Black, Col.Blue},
+        new[]{ Col.Orange, Col.White, Col.Green, Col.Blue},
+        new[]{ Col.White, Col.Black, Col.Orange, Col.Blue},
+        new[]{ Col.Black, Col.Green, Col.Orange, Col.Purple},
+        new[]{ Col.White, Col.Yellow, Col.Blue, Col.Red},
     };
     Col[] chosenDiagram;
-    int[] correctPositions = new int[] { 2, 0, 1, 3, 0, 1, 3, 2, 2, 3, 1, 1, 0, 3 };
+    int[] correctPositions = new int[] { 2, 0, 1, 3, 0, 1, 3, 2, 2, 3, 1, 1 };
 
     int diagramNumber;
     int offset;
@@ -81,41 +81,6 @@ public class LEDsScript : MonoBehaviour {
          GetChange();
          DisplayThings();
          DoLogging();
-
-        /*
-        int count = 12;
-        int colorCount = 8;
-
-        string colorNames = "ROYGBPKW";
-        int[][] diagrams = new int[count][].Select(x => new int[4]).ToArray();
-        List<int> edges = new List<int>();
-        List<int> opposites = new List<int>();
-        int iterations = 0;
-        for (int i = 0; i < count; i++)
-        {
-            int[] pair;
-            int[] opposite;
-            do
-            {
-                iterations++;
-                int[] numbers = Enumerable.Range(0, colorCount).ToArray().Shuffle();
-                diagrams[i] = numbers.Take(4).ToArray();
-                pair = new int[4];
-                opposite = new int[2];
-                for (int j = 0; j < 4; j++)
-                    pair[j] = colorCount * diagrams[i][j] + diagrams[i][(j + 1) % 4];
-                opposite[0] = colorCount * diagrams[i][0] + diagrams[i][2];
-                opposite[1] = colorCount * diagrams[i][1] + diagrams[i][3];
-
-            } while (pair.Any(x => edges.Contains(x)) || opposite.Any(x => opposites.Contains(x)));
-            opposites.AddRange(opposite);
-            edges.AddRange(pair);
-        }
-        Debug.Log(diagrams.Select(dia => dia.Select(x => colorNames[x]).Join("")).Join());
-        Debug.LogFormat("Script took {0} iterations.", iterations);
-        */
-        //Generates a series of grids. 12 is the maximum without allowing duplicates. Allowing duplicates, 15 is the maximum but some of the diagrams are pretty gross. 
-
     }
 
     void GetDiagram()
