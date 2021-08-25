@@ -180,7 +180,7 @@ public class LEDsScript : MonoBehaviour {
 
     IEnumerator ProcessTwitchCommand (string command)
     {
-        string[] colornames = new[] { "RED", "ORANGE", "YELLOW", "GREEN", "BLUE", "PURPLE", "BLACK" };
+        string[] colornames = new[] { "RED", "ORANGE", "YELLOW", "GREEN", "BLUE", "PURPLE", "BLACK", "WHITE" };
         command = command.Trim().ToUpperInvariant();
         string[] parameters = command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
         if (new string[] { "COLORBLIND", "COLOURBLIND", "COLOR-BLIND", "COLOUR-BLIND", "CB" }.Contains(command))
